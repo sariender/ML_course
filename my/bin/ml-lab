@@ -1,0 +1,35 @@
+#!/usr/bin/env bash
+# Scaffold your own copy of a lab: ml-lab 02  ->  my/labs/ex02/
+# Copies the upstream template (which you never edit) into your own directory,
+# so upstream updates can never conflict with your work.
+set -euo pipefail
+
+ROOT=$(git rev-parse --show-toplevel)
+cd "$ROOT"
+
+N=$(printf "%02d" "$((10#${1:?usage: ml-lab <lab-number>}))")
+SRC="labs/ex$N"
+DST="my/labs/ex$N"
+
+[ -d "$SRC" ] || { echo "No such lab: $SRC (has it been released yet? try: my/bin/ml-sync)"; exit 1; }
+[ -d "$DST" ] && { echo "$DST already exists — not overwriting."; exit 1; }
+
+mkdir -p "$DST"
+if [ -d "$SRC/template" ]; then
+  rsync -a --exclude='__pycache__' --exclude='.ipynb_checkpoints' "$SRC/template/" "$DST/"
+else
+  find "$SRC" -maxdepth 1 -type f \( -name '*.ipynb' -o -name '*.py' -o -name '*.csv' \) -exec cp {} "$DST/" \;
+fi
+# helper modules and data the notebooks import live one level up in some labs
+for extra in test_utils.py helpers.py plots.py; do
+  [ -f "$SRC/$extra" ] && [ ! -f "$DST/$extra" ] && cp "$SRC/$extra" "$DST/"
+done
+for d in $(find "$SRC" -maxdepth 2 -type d -name 'data'); do
+  rsync -a --exclude='__pycache__' "$d" "$DST/"
+done
+
+echo "Created $DST:"
+ls -1 "$DST" | sed 's/^/    /'
+echo
+echo "Reference (do not edit): $SRC"
+echo "Start:  conda activate ml-course && jupyter lab \"$DST\""

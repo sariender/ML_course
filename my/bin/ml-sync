@@ -1,0 +1,35 @@
+#!/usr/bin/env bash
+# Pull new course material from upstream, then merge it into your study branch.
+# Safe to run any time: main is never edited, so the pull is always a fast-forward.
+set -euo pipefail
+
+ROOT=$(git rev-parse --show-toplevel)
+cd "$ROOT"
+
+if [ -n "$(git status --porcelain)" ]; then
+  echo "You have uncommitted changes. Commit them first:"
+  echo "    git add -A && git commit -m 'wip'"
+  exit 1
+fi
+
+START_BRANCH=$(git rev-parse --abbrev-ref HEAD)
+git checkout main --quiet
+OLD=$(git rev-parse HEAD)
+git pull --ff-only upstream main
+NEW=$(git rev-parse HEAD)
+
+if [ "$OLD" = "$NEW" ]; then
+  echo "Already up to date."
+  git checkout "$START_BRANCH" --quiet
+  exit 0
+fi
+
+echo
+echo "New / changed course material:"
+git diff --name-status "$OLD" "$NEW" | sed 's/^/    /'
+echo
+
+git checkout study --quiet
+git merge main -m "Merge upstream course updates"
+echo
+echo "Done. You are on branch: $(git rev-parse --abbrev-ref HEAD)"

@@ -1,0 +1,96 @@
+% CS-433 Machine Learning -- exam cheat sheet (A4, both sides allowed).
+% Build:  pdflatex cheatsheet.tex
+% Rule from the course info sheet: ONE A4 page, both sides. No calculator.
+% Strategy: add to this EVERY week, right after the lab. Do not write it in December.
+\documentclass[a4paper,8pt,landscape]{extarticle}
+\usepackage[margin=6mm,landscape]{geometry}
+\usepackage{multicol,amsmath,amssymb,bm,enumitem,xcolor,microtype}
+\usepackage[compact]{titlesec}
+
+\titlespacing{\section}{0pt}{1.2ex}{0.4ex}
+\titlespacing{\subsection}{0pt}{0.7ex}{0.2ex}
+\titleformat{\section}{\bfseries\small\color{blue!55!black}}{}{0em}{}
+\titleformat{\subsection}{\bfseries\footnotesize}{}{0em}{}
+\setlist[itemize]{leftmargin=*,topsep=0.2ex,itemsep=0ex,parsep=0ex}
+\pagestyle{empty}
+\setlength{\columnsep}{4mm}
+\setlength{\parindent}{0pt}
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\Lw}{\mathcal{L}(\bm{w})}
+\newcommand{\xn}{\bm{x}_n}
+\newcommand{\w}{\bm{w}}
+
+\begin{document}
+\begin{multicols*}{4}
+
+\section*{Setup \& notation}
+Data $\{(\xn,y_n)\}_{n=1}^N$, $\xn\in\R^D$, $N$ = data size, $D$ = dimension.
+Design matrix $\bm{X}\in\R^{N\times D}$ (rows $\xn^\top$), targets $\bm{y}\in\R^N$.
+Offset: prepend a column of ones $\Rightarrow \tilde{\bm{X}}$, $\tilde{\w}=(w_0,\w)$.
+Prediction (linear): $\hat{y}_n=\xn^\top\w$.
+
+\section*{Loss functions}
+\textbf{MSE} $\ \Lw=\frac{1}{2N}\sum_n (y_n-\xn^\top\w)^2=\frac{1}{2N}\|\bm{y}-\bm{X}\w\|^2$
+\begin{itemize}
+\item Convex, differentiable, closed form. Not robust to outliers ($e^2$ blows up).
+\end{itemize}
+\textbf{MAE} $\ \Lw=\frac{1}{N}\sum_n|y_n-\xn^\top\w|$
+\begin{itemize}
+\item Convex, robust to outliers, \emph{not} differentiable at 0 (subgradient).
+\end{itemize}
+\textbf{Huber} — quadratic for $|e|\le\delta$, linear beyond: convex, differentiable, robust.
+\[\!\!\ell_\delta(e)=\begin{cases}\tfrac12 e^2 & |e|\le\delta\\ \delta(|e|-\tfrac12\delta)&|e|>\delta\end{cases}\]
+\textbf{Trade-off:} statistical (robustness) vs.\ computational (convexity/smoothness).
+
+\section*{Linear regression}
+\textbf{Normal equations:} minimise MSE $\Rightarrow \bm{X}^\top\bm{X}\w=\bm{X}^\top\bm{y}$,
+so $\w^\star=(\bm{X}^\top\bm{X})^{-1}\bm{X}^\top\bm{y}$ (if invertible).
+\begin{itemize}
+\item Cost $O(ND^2+D^3)$. Ill-conditioned / singular when $D>N$ or collinear features.
+\item Gram matrix $\bm{X}^\top\bm{X}$ is PSD; invertible $\iff$ $\bm{X}$ has full column rank.
+\end{itemize}
+\textbf{Ridge:} $\min \frac{1}{2N}\|\bm{y}-\bm{X}\w\|^2+\lambda\|\w\|^2
+\Rightarrow \w^\star=(\bm{X}^\top\bm{X}+\lambda' \bm{I})^{-1}\bm{X}^\top\bm{y}$.
+Always invertible for $\lambda>0$. \emph{Mind the $2N$ convention: $\lambda'=2N\lambda$.}
+
+\section*{Optimization}
+\textbf{Gradient descent:} $\w^{(t+1)}=\w^{(t)}-\gamma\nabla\mathcal{L}(\w^{(t)})$.
+For MSE: $\nabla\Lw=-\frac1N\bm{X}^\top(\bm{y}-\bm{X}\w)=-\frac1N\bm{X}^\top\bm{e}$.
+\begin{itemize}
+\item $\gamma$ too large $\to$ diverges; too small $\to$ slow. Step $O(ND)$.
+\end{itemize}
+\textbf{SGD:} pick $n$ at random, $\w \leftarrow \w-\gamma\nabla\ell_n(\w)$. Step $O(D)$.
+Unbiased: $\mathbb{E}[\nabla\ell_n]=\nabla\mathcal{L}$. Needs decaying $\gamma_t$ to converge.
+\textbf{Convexity:} $\mathcal{L}$ convex $\Rightarrow$ every local min is global.
+$f$ convex $\iff \nabla^2 f\succeq 0$ $\iff f(\lambda a+(1-\lambda)b)\le\lambda f(a)+(1-\lambda)f(b)$.
+Sum of convex is convex; convex $\circ$ affine is convex.
+
+\section*{TODO -- fill in as lectures land}
+% Keep each block short. Formula + the one condition you always forget.
+\subsection*{Logistic regression \& classification}
+% sigmoid, cross-entropy loss, gradient, Newton/IRLS, why not MSE
+\subsection*{Generalization: bias--variance, CV}
+% k-fold protocol, what leaks, train/val/test, bias-variance decomposition
+\subsection*{Regularization}
+% L1 vs L2, sparsity, why L1 gives corners
+\subsection*{SVM \& kernels}
+% hinge loss, margin, dual, kernel trick, common kernels, Mercer condition
+\subsection*{k-NN \& curse of dimensionality}
+\subsection*{Neural nets \& backprop}
+% chain rule table, activation derivatives, init, vanishing gradients
+\subsection*{CNNs / transformers}
+% conv output size formula, params count, attention formula
+\subsection*{Unsupervised: k-means, GMM, EM}
+% objective, update equations, why EM monotonically improves
+\subsection*{PCA \& matrix factorization}
+% eigen/SVD form, variance explained, centering matters
+\subsection*{Generative models}
+
+\section*{Things I keep getting wrong}
+% One line per mistake found in a past exam or lab. This section wins points.
+\begin{itemize}
+\item
+\end{itemize}
+
+\end{multicols*}
+\end{document}

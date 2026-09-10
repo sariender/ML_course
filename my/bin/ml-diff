@@ -1,0 +1,29 @@
+#!/usr/bin/env bash
+# Compare your lab notebook against the official solution once it is released.
+#   ml-diff 02              -> list what is comparable in lab 02
+#   ml-diff 02 ex02.ipynb   -> open a rich notebook diff in the browser
+set -euo pipefail
+
+ROOT=$(git rev-parse --show-toplevel)
+cd "$ROOT"
+
+N=$(printf "%02d" "$((10#${1:?usage: ml-diff <lab-number> [notebook.ipynb]}))")
+SOL="labs/ex$N/solution"
+MINE="my/labs/ex$N"
+
+[ -d "$SOL" ] || { echo "No official solution for lab $N yet (looked in $SOL)."; exit 1; }
+[ -d "$MINE" ] || { echo "You have no work in $MINE."; exit 1; }
+
+if [ $# -lt 2 ]; then
+  echo "Your notebooks in $MINE:";      ls -1 "$MINE"/*.ipynb 2>/dev/null | xargs -n1 basename | sed 's/^/    /'
+  echo "Official solutions in $SOL:";   ls -1 "$SOL"/*.ipynb  2>/dev/null | xargs -n1 basename | sed 's/^/    /'
+  echo; echo "Then run:  my/bin/ml-diff $N <notebook.ipynb>"
+  exit 0
+fi
+
+NB="$2"
+[ -f "$MINE/$NB" ] || { echo "Missing $MINE/$NB"; exit 1; }
+[ -f "$SOL/$NB" ]  || { echo "Missing $SOL/$NB"; exit 1; }
+
+echo "Opening diff: your $NB  vs  official solution ..."
+nbdiff-web "$MINE/$NB" "$SOL/$NB"
